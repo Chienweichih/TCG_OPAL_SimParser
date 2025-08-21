@@ -10,6 +10,15 @@
 #include "OpalSimParserObj.h"
 using namespace std;
 
+#define INPUT_FROM_FILE
+
+#ifdef INPUT_FROM_FILE
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <string>
+#include <iomanip>
+#else
 uint32_t TPer_Properties_req[] = {
 0x00000000, 0x07FE0000, 0x00000000, 0x00000000,
 0x000000D0, 0x00000000, 0x00000000, 0x00000000,
@@ -44,6 +53,7 @@ uint32_t TPer_Properties_req[] = {
 0x00000000, 0x00000000, 0x00000000, 0x00000000,
 0x00000000, 0x00000000, 0x00000000, 0x00000000
 };
+#endif
 
 uint8_t *tcg_send_packet;
 
@@ -78,7 +88,7 @@ std::ostream& operator << (std::ostream& out, const OPAL_TOKENS& t)
         case CALL:              return(out << "CALL");
         case END_OF_DATA:       return(out << "END_OF_DATA");
         case END_OF_SESSION:    return(out << "END_OF_SESSION");
-        case START_TRANSMISSION:return(out << "START_TRANSMISSION");
+        case START_TRANSACTION: return(out << "START_TRANSACTION");
         case END_TRANSACTION:   return(out << "END_TRANSMISSION");
         case EMPTY_ATOM:        return(out << "EMPTY_ATOM");
         case RESERVED_1:
@@ -97,6 +107,7 @@ std::ostream& operator << (std::ostream& out, const OPAL_TOKENS& t)
    return (out);
 }
 
+#ifndef INPUT_FROM_FILE
 void PrintTokenInfo(CToken &token)
 {
     OPAL_TOKENS tkn;
@@ -123,12 +134,102 @@ void PrintTokenInfo(CToken &token)
     }
     cout << noboolalpha << noshowbase << nouppercase << dec << endl;
 }
+#else
+void PrintTokenInfo(CToken &token)
+{
+    OPAL_TOKENS tkn;
+
+    static uint8_t indent = 0;
+    switch (token.GetTokenType())
+    {
+        case END_LIST:
+        case END_NAME:
+        case END_TRANSACTION:
+            if (indent > 0)
+                --indent;
+            break;
+
+        default:
+            break;
+    }
+    for (uint8_t i = 0; i < indent; ++i)
+    {
+        cout << "    ";
+    }
+
+    cout << boolalpha << uppercase << hex;
+    tkn = static_cast<OPAL_TOKENS>(token.GetTokenType());
+    cout << setfill('0') << setw(2) << static_cast<int>(token.GetTokenType()) << " (" << tkn << ") ";
+
+    if (token.GetDataLength() > 1)
+    {
+        uint8_t *buf = token.GetBufPtr();
+        for(uint32_t i=0; i<token.GetDataLength(); i++)
+        {
+            cout << setfill('0') << setw(2) << static_cast<uint32_t>(buf[i]) << " ";
+        }
+    }
+    cout << noboolalpha << nouppercase << dec << endl;
+
+    switch (token.GetTokenType())
+    {
+        case START_LIST:
+        case START_NAME:
+        case START_TRANSACTION:
+            ++indent;
+            break;
+
+        default:
+            break;
+    }
+}
+
+std::vector<uint32_t> parseHexDumpFile(const std::string& filename)
+{
+    std::vector<uint32_t> values;
+    std::ifstream file(filename);
+    std::string line;
+
+    if (!file.is_open())
+    {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return values;
+    }
+
+    while (std::getline(file, line))
+    {
+        std::stringstream ss(line);
+        std::string token;
+        std::vector<std::string> tokens;
+
+        while (ss >> token)
+        {
+            tokens.push_back(token);
+        }
+
+        for (size_t i = 0; i < tokens.size(); ++i)
+        {
+            if ((i != 0) && (i != (tokens.size() - 1)))
+            {
+                uint32_t value;
+                std::stringstream hexStream;
+                hexStream << std::hex << tokens[i];
+                hexStream >> value;
+                values.push_back(value);
+            }
+        }
+    }
+
+    return values;
+}
+#endif
 
 //*****************************************************************************
 //Main
 //*****************************************************************************
 int main()
 {
+#ifndef INPUT_FROM_FILE
     tcg_send_packet = (uint8_t*) malloc(sizeof(TPer_Properties_req));
     if(tcg_send_packet == NULL)
     {
@@ -137,6 +238,21 @@ int main()
     }
     memset(tcg_send_packet, 0x00, sizeof(TPer_Properties_req));
     GetPayload(TPer_Properties_req, tcg_send_packet, sizeof(TPer_Properties_req)/sizeof(uint32_t));
+#else
+    std::vector<uint32_t> parsedValues = parseHexDumpFile("hex_dump.txt");
+    tcg_send_packet = (uint8_t*) malloc(sizeof(uint32_t) * parsedValues.size());
+    if(tcg_send_packet == NULL)
+    {
+        printf("FAIL: Unable to allocate memory for tcg_send_packet \n");
+        return 1;
+    }
+    memset(tcg_send_packet, 0x00, sizeof(uint32_t) * parsedValues.size());
+
+    uint32_t* TPer_Properties_req = new uint32_t[parsedValues.size()];
+    std::copy(parsedValues.begin(), parsedValues.end(), TPer_Properties_req);
+    GetPayload(TPer_Properties_req, tcg_send_packet, parsedValues.size());
+    delete[] TPer_Properties_req;
+#endif
 
     GetComPacket(tcg_send_packet, &com_packet);
     GetPacket(tcg_send_packet, &packet);

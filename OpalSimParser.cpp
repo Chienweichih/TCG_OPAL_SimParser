@@ -89,7 +89,7 @@ void GetToken(uint8_t *buf, TOKEN *token)
         {
             token->token_type = TINY_ATOM;
             token->token_lgth = TINY_ATOM_LENGTH;
-            token->data_lgth = 1;
+            token->data_lgth = 0;
             sign_mask = TINY_ATOM_SIGN_MASK;
             token->buf = buf;
         }
