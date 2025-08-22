@@ -230,20 +230,34 @@ std::vector<uint32_t> parseHexDumpFile(const std::string& filename)
 int main()
 {
 #ifndef INPUT_FROM_FILE
+    if (false == CheckPktHdrLength(sizeof(TPer_Properties_req)))
+    {
+        printf("FAIL: Input is not valid ComPackets\n");
+        return 1;
+    }
+
     tcg_send_packet = (uint8_t*) malloc(sizeof(TPer_Properties_req));
     if(tcg_send_packet == NULL)
     {
         printf("FAIL: Unable to allocate memory for tcg_send_packet \n");
+        free(tcg_send_packet);
         return 1;
     }
     memset(tcg_send_packet, 0x00, sizeof(TPer_Properties_req));
     GetPayload(TPer_Properties_req, tcg_send_packet, sizeof(TPer_Properties_req)/sizeof(uint32_t));
 #else
     std::vector<uint32_t> parsedValues = parseHexDumpFile("hex_dump.txt");
+    if (false == CheckPktHdrLength(sizeof(uint32_t) * parsedValues.size()))
+    {
+        printf("FAIL: Input is not valid ComPackets\n");
+        return 1;
+    }
+
     tcg_send_packet = (uint8_t*) malloc(sizeof(uint32_t) * parsedValues.size());
     if(tcg_send_packet == NULL)
     {
         printf("FAIL: Unable to allocate memory for tcg_send_packet \n");
+        free(tcg_send_packet);
         return 1;
     }
     memset(tcg_send_packet, 0x00, sizeof(uint32_t) * parsedValues.size());
@@ -257,6 +271,21 @@ int main()
     GetComPacket(tcg_send_packet, &com_packet);
     GetPacket(tcg_send_packet, &packet);
     GetDataSubPacket(tcg_send_packet, &data_sub_packet);
+
+#ifndef INPUT_FROM_FILE
+    if (false == CheckDtaPldLength(data_sub_packet.Length, sizeof(TPer_Properties_req)))
+#else
+    if (false == CheckDtaPldLength(data_sub_packet.Length, (sizeof(uint32_t) * parsedValues.size())))
+#endif
+    {
+        printf("FAIL: SubPackets length is larger than Data Payload\n");
+        free(tcg_send_packet);
+        return 1;
+    }
+    else
+    {
+        DumpPacketHeader(&com_packet, &packet, &data_sub_packet);
+    }
 
     p_data_payload = GetDataPayload(tcg_send_packet);
 
@@ -280,6 +309,7 @@ int main()
 //*****************************************************************************
 //Example for ANSI C parser version
 //*****************************************************************************
+#if 0
     TOKEN token;
 
     GetToken(p_data_payload, &token);
@@ -296,6 +326,7 @@ int main()
         default:
             printf("token %d \n", token.token_type);
     }
+#endif
 
     free(tcg_send_packet);
 }

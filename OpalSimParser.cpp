@@ -4,6 +4,7 @@
 #include <iostream>
 #include <stdint.h>
 #include <string.h>
+#include <iomanip>
 #include "OpalSimParser.h"
 using namespace std;
 
@@ -195,6 +196,37 @@ uint16_t GetUint16(TOKEN *token)
 uint8_t GetUint8(TOKEN *token)
 {
     return *((uint8_t*)(token->buf));
+}
+
+bool CheckPktHdrLength(uint32_t lgth)
+{
+    return (lgth >= (sizeof(COM_PACKET) + sizeof(PACKET) + sizeof(DATA_SUB_PACKET)));
+}
+
+bool CheckDtaPldLength(uint32_t subPktLgth, uint32_t lgth)
+{
+    return (lgth >= (sizeof(COM_PACKET) + sizeof(PACKET) + sizeof(DATA_SUB_PACKET) + subPktLgth));
+}
+
+void DumpPacketHeader(COM_PACKET *comPacket, PACKET *packet, DATA_SUB_PACKET *subPacket)
+{
+    cout << "==========" << endl << "(COM_PACKET)" << endl;
+    cout << "ExComID = 0x" << hex << setfill('0') << setw(8) << comPacket->ExComID << dec << endl;
+    cout << "OutstandingData = " << comPacket->OutstandingData << endl;
+    cout << "MinTransfer = " << comPacket->MinTransfer << endl;
+    cout << "Length = " << comPacket->Length << endl;
+
+    cout << "==========" << endl << "(PACKET)" << endl;
+    cout << "Session = 0x" << hex << setfill('0') << setw(16) << packet->Session << dec << endl;
+    cout << "SeqNumber = " << packet->SeqNumber << endl;
+    cout << "AckType = " << packet->AckType << endl;
+    cout << "Acknowledgement = " << packet->Acknowledgement << endl;
+    cout << "Length = " << packet->Length << endl;
+
+    cout << "==========" << endl << "(DATA_SUB_PACKET)" << endl;
+    cout << "Kind = " << subPacket->Kind << endl;
+    cout << "Length = " << subPacket->Length << endl;
+    cout << "==========" << endl;
 }
 
 //*****************************************************************************

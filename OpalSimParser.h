@@ -96,6 +96,9 @@ void GetToken(uint8_t*, TOKEN*);
 void GetComPacket(uint8_t*, COM_PACKET*);
 void GetPacket(uint8_t*, PACKET*);
 void GetDataSubPacket(uint8_t*, DATA_SUB_PACKET*);
+bool CheckPktHdrLength(uint32_t);
+bool CheckDtaPldLength(uint32_t, uint32_t);
+void DumpPacketHeader(COM_PACKET *, PACKET *, DATA_SUB_PACKET *);
 
 bool CallTokenHandler(uint8_t *);
 
