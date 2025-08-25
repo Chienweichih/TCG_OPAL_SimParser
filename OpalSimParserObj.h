@@ -18,6 +18,7 @@ class CToken
     uint32_t GetDataLength();
     uint32_t GetTokenLength();
     uint8_t* GetBufPtr();
+    uint8_t* GetFullBufPtr();
 
     bool IsSigned();
     bool IsSequence();

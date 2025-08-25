@@ -108,6 +108,7 @@ void GetToken(uint8_t *buf, TOKEN *token)
 	    token->data_lgth = 0;
 		token->buf = buf;
 	}
+    token->full_buf = buf;
 }
 
 //*****************************************************************************

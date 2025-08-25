@@ -62,6 +62,7 @@ void CToken::GetTokenFromBuf(uint8_t *buf)
         token.data_lgth = 0;
         token.buf = buf;
     }
+    token.full_buf = buf;
 }
 
 //*****************************************************************************
@@ -94,6 +95,14 @@ uint32_t CToken::GetTokenLength()
 uint8_t* CToken::GetBufPtr()
 {
     return token.buf;
+}
+
+//*****************************************************************************
+//Get pointer to full buffer
+//*****************************************************************************
+uint8_t* CToken::GetFullBufPtr()
+{
+    return token.full_buf;
 }
 
 //*****************************************************************************

@@ -159,14 +159,13 @@ void PrintTokenInfo(CToken &token)
 
     cout << boolalpha << uppercase << hex;
     tkn = static_cast<OPAL_TOKENS>(token.GetTokenType());
-    cout << setfill('0') << setw(2) << static_cast<int>(token.GetTokenType()) << " (" << tkn << ") ";
-
-    if (token.GetDataLength() > 1)
+    uint8_t *buf = token.GetFullBufPtr();
+    for(uint32_t i=0; i<token.GetTokenLength()+token.GetDataLength(); i++)
     {
-        uint8_t *buf = token.GetBufPtr();
-        for(uint32_t i=0; i<token.GetDataLength(); i++)
+        cout << setfill('0') << setw(2) << static_cast<uint32_t>(buf[i]) << " ";
+        if (i == (token.GetTokenLength() - 1))
         {
-            cout << setfill('0') << setw(2) << static_cast<uint32_t>(buf[i]) << " ";
+            cout  << "(" << tkn << ") ";
         }
     }
     cout << noboolalpha << nouppercase << dec << endl;
@@ -209,7 +208,7 @@ std::vector<uint32_t> parseHexDumpFile(const std::string& filename)
 
         for (size_t i = 0; i < tokens.size(); ++i)
         {
-            if ((i != 0) && (i != (tokens.size() - 1)))
+            if ((i > 0) && (i < 5))
             {
                 uint32_t value;
                 std::stringstream hexStream;

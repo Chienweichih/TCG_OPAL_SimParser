@@ -83,6 +83,7 @@ typedef struct _TOKEN_
     uint8_t    token_lgth;  //token length in bytes
     uint32_t   data_lgth;   //data length in bytes
     uint8_t    *buf;        //pointer to byte or char sequence
+    uint8_t    *full_buf;
 } TOKEN;
 
 
