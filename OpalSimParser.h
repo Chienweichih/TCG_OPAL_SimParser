@@ -6,6 +6,12 @@
 
 typedef enum _OPAL_TOKENS_
 {
+    // fix warning
+    TINY_ATOM   = 0x00,
+    SHORT_ATOM  = 0x80,
+    MEDIUM_ATOM = 0xC0,
+    LONG_ATOM   = 0xE0,
+
     START_LIST  = 0xF0,
     END_LIST,
     START_NAME,
@@ -24,6 +30,7 @@ typedef enum _OPAL_TOKENS_
     EMPTY_ATOM
 } OPAL_TOKENS;
 
+#if 0 // fix warning
 typedef enum _ATOM_TOKENS_
 {
     TINY_ATOM   = 0x00,
@@ -32,6 +39,7 @@ typedef enum _ATOM_TOKENS_
     LONG_ATOM   = 0xE0
 
 } ATOM_TOKENS;
+#endif
 
 typedef enum _ATOM_SIGN_MASKS_
 {
